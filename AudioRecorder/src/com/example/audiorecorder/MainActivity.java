@@ -1,15 +1,20 @@
 package com.example.audiorecorder;
 
+import android.annotation.SuppressLint;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder.AudioSource;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 public class MainActivity extends ActionBarActivity {
 	
@@ -18,18 +23,50 @@ public class MainActivity extends ActionBarActivity {
 	AudioTrack audioTrack = null;
 	AudioRecord audioRecorder = null;
 	
+	Thread recordingThread = null;
+	
 	byte[] globalBuffer = null;
 	
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
 		setContentView(R.layout.activity_main);
-		Button recordButton = (Button) findViewById(R.id.btn_start_audio_record);
-		recordButton.setOnClickListener(new View.OnClickListener() {
-			
-			public void onClick(View v) {
-				globalBuffer = startRecording();
+		
+		ActionBar actionBar = getSupportActionBar();
+		actionBar.hide();
+		
+		TextView displayText = (TextView) findViewById(R.id.screenText);
+		
+		//display "connecting... while connecting
+		
+		//display "sending" while sending
+		
+		//display "receiving" while receiving
+		
+		ImageButton recordButton = (ImageButton) findViewById(R.id.btn_start_audio_record);
+		recordButton.setOnTouchListener(new View.OnTouchListener() {
+			//geht noch nicht...
+			@SuppressLint("ClickableViewAccessibility")
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				// TODO Auto-generated method stub
+					switch(event.getAction()){
+						case MotionEvent.ACTION_DOWN:
+							recordingThread = new Thread(new Runnable(){
+
+								@Override
+								public void run() {
+									globalBuffer = startRecording();							
+								}
+								
+							});
+							recordingThread.start();
+
+						case MotionEvent.ACTION_UP:
+							stopRecording();
+					}
+				return false;
 			}
 		});
 		
@@ -76,11 +113,16 @@ public class MainActivity extends ActionBarActivity {
     		N += audioRecorder.read(buffer,N, 128);
     	}
     	
+    	return buffer;
+    }
+    
+	public void stopRecording() {
+
+		recordingThread.stop();
+		
     	audioRecorder.stop();
     	audioRecorder.release();
     	audioRecorder = null;
-    	
-    	return buffer;
-    }
+	}
     	
 }
